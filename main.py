@@ -1,31 +1,36 @@
 import os
 import json
 import tempfile
+import time
 from pydub import AudioSegment
 from pydub.utils import which
 import speech_recognition as sr
-from groq import Groq
 from dotenv import load_dotenv
+import openai
 
-#  Load environment variables from .env
+# 🌍 Load .env and OpenRouter API Key
 load_dotenv()
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-#  Get GROQ_API_KEY from .env
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not OPENROUTER_API_KEY:
+    raise ValueError("❌ Missing OPENROUTER_API_KEY in .env")
 
-#  Debug print: show first 10 characters of API key
-print("Loaded API Key:", GROQ_API_KEY[:10] + "...")
+# 🛠️ Configure OpenRouter
+openai.api_key = OPENROUTER_API_KEY
+openai.api_base = "https://openrouter.ai/api/v1"
 
-if not GROQ_API_KEY:
-    raise ValueError(" Missing GROQ_API_KEY! Set it in .env or system environment.")
-
-# 🎛 Set ffmpeg path
+# 🎛 Set ffmpeg converter path
 AudioSegment.converter = which(
     "C:\\Users\\visha\\Downloads\\ffmpeg-2025-06-16-git-e6fb8f373e-essentials_build\\ffmpeg-2025-06-16-git-e6fb8f373e-essentials_build\\bin\\ffmpeg.exe"
 )
 
-#  Initialize Groq client
-client = Groq(api_key=GROQ_API_KEY)
+def find_latest_audio_file(directory):
+    extensions = (".mp3", ".wav")
+    audio_files = [f for f in os.listdir(directory) if f.lower().endswith(extensions)]
+    if not audio_files:
+        raise FileNotFoundError("❌ No .mp3 or .wav files found in the current folder.")
+    audio_files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+    return os.path.join(directory, audio_files[0])
 
 def convert_audio_to_wav(file_path):
     print("🎧 Converting audio to 16kHz mono WAV...")
@@ -46,9 +51,9 @@ def transcribe_audio(file_path):
             text = recognizer.recognize_google(audio_data)
         return text.strip()
     except sr.UnknownValueError:
-        raise Exception(" Could not understand audio. Try a clearer recording.")
+        raise Exception("Could not understand audio. Try a clearer recording.")
     except sr.RequestError as e:
-        raise Exception(f" Google Speech Recognition failed: {e}")
+        raise Exception(f"Google Speech Recognition failed: {e}")
     finally:
         os.remove(wav_path)
 
@@ -66,55 +71,50 @@ Instructions:
 
 [
   {
-    "entries": [
-      {
-        "entry": 1,
-        "title": "Short, specific title",
-        "description": "Clear and complete description."
-      }
-    ]
+    "entry": 1,
+    "title": "Short, specific title",
+    "description": "Clear and complete description."
   }
 ]
-
-Notes:
-- Do not include empty or partial entries.
-- Do not include categories or commentary.
-- Output only valid JSON, nothing else.
 """
+
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_input}
     ]
 
-    print("📡 Sending transcription to Groq...")
-    response = client.chat.completions.create(
-        model="llama3-70b-8192",
+    print("📡 Sending transcription to LLaMA 3 via OpenRouter...")
+    response = openai.ChatCompletion.create(
+        model="meta-llama/llama-3-70b-instruct",
         messages=messages,
         temperature=0.3,
         max_tokens=2048
     )
-    return response.choices[0].message.content.strip()
+    return response["choices"][0]["message"]["content"].strip()
 
 if __name__ == "__main__":
-    file_path = input("Enter the path to your audio file (.mp3 or .wav): ").strip()
-
-    if not os.path.isfile(file_path):
-        print(" File does not exist. Please check the path.")
-        exit(1)
-
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     try:
+        file_path = find_latest_audio_file(script_dir)
+        print(f"🔍 Using most recent audio file: {os.path.basename(file_path)}")
+
         transcription = transcribe_audio(file_path)
-        print(f"\n Transcribed Text:\n{transcription}\n")
+        print(f"\n📝 Transcribed Text:\n{transcription}\n")
 
         structured_output = generate_structured_output(transcription)
 
         try:
             parsed_output = json.loads(structured_output)
-            print("\n Structured JSON Output:\n")
+            print("\n✅ Structured JSON Output:\n")
             print(json.dumps(parsed_output, indent=2))
+
+            with open("structured_output.json", "w", encoding="utf-8") as f:
+                json.dump(parsed_output, f, indent=2)
+            print("📁 Output saved to structured_output.json")
+
         except json.JSONDecodeError:
-            print(" Could not parse the response as JSON. Raw output:")
+            print("❌ Could not parse JSON. Raw output:")
             print(structured_output)
 
     except Exception as e:
-        print(f"\n Error during processing:\n{e}")
+        print(f"\n❌ Error during processing:\n{e}")
