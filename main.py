@@ -8,14 +8,14 @@ import speech_recognition as sr
 from dotenv import load_dotenv
 import openai
 
-# 🌍 Load .env and OpenRouter API Key
+#  Load .env and OpenRouter API Key
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if not OPENROUTER_API_KEY:
-    raise ValueError("❌ Missing OPENROUTER_API_KEY in .env")
+    raise ValueError(" Missing OPENROUTER_API_KEY in .env")
 
-# 🛠️ Configure OpenRouter
+#  Configure OpenRouter
 openai.api_key = OPENROUTER_API_KEY
 openai.api_base = "https://openrouter.ai/api/v1"
 
@@ -28,12 +28,12 @@ def find_latest_audio_file(directory):
     extensions = (".mp3", ".wav")
     audio_files = [f for f in os.listdir(directory) if f.lower().endswith(extensions)]
     if not audio_files:
-        raise FileNotFoundError("❌ No .mp3 or .wav files found in the current folder.")
+        raise FileNotFoundError(" No .mp3 or .wav files found in the current folder.")
     audio_files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
     return os.path.join(directory, audio_files[0])
 
 def convert_audio_to_wav(file_path):
-    print("🎧 Converting audio to 16kHz mono WAV...")
+    print(" Converting audio to 16kHz mono WAV...")
     audio = AudioSegment.from_file(file_path)
     audio = audio.set_channels(1).set_frame_rate(16000)
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
@@ -44,7 +44,7 @@ def convert_audio_to_wav(file_path):
 def transcribe_audio(file_path):
     wav_path = convert_audio_to_wav(file_path)
     recognizer = sr.Recognizer()
-    print("🗣️ Transcribing audio with SpeechRecognition...")
+    print(" Transcribing audio with SpeechRecognition...")
     try:
         with sr.AudioFile(wav_path) as source:
             audio_data = recognizer.record(source)
@@ -83,7 +83,7 @@ Instructions:
         {"role": "user", "content": user_input}
     ]
 
-    print("📡 Sending transcription to LLaMA 3 via OpenRouter...")
+    print(" Sending transcription to LLaMA 3 via OpenRouter...")
     response = openai.ChatCompletion.create(
         model="meta-llama/llama-3-70b-instruct",
         messages=messages,
@@ -96,25 +96,25 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     try:
         file_path = find_latest_audio_file(script_dir)
-        print(f"🔍 Using most recent audio file: {os.path.basename(file_path)}")
+        print(f" Using most recent audio file: {os.path.basename(file_path)}")
 
         transcription = transcribe_audio(file_path)
-        print(f"\n📝 Transcribed Text:\n{transcription}\n")
+        print(f"\n Transcribed Text:\n{transcription}\n")
 
         structured_output = generate_structured_output(transcription)
 
         try:
             parsed_output = json.loads(structured_output)
-            print("\n✅ Structured JSON Output:\n")
+            print("\n Structured JSON Output:\n")
             print(json.dumps(parsed_output, indent=2))
 
             with open("structured_output.json", "w", encoding="utf-8") as f:
                 json.dump(parsed_output, f, indent=2)
-            print("📁 Output saved to structured_output.json")
+            print(" Output saved to structured_output.json")
 
         except json.JSONDecodeError:
-            print("❌ Could not parse JSON. Raw output:")
+            print(" Could not parse JSON. Raw output:")
             print(structured_output)
 
     except Exception as e:
-        print(f"\n❌ Error during processing:\n{e}")
+        print(f"\n Error during processing:\n{e}")
