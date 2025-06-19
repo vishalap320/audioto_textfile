@@ -7,23 +7,30 @@ import speech_recognition as sr
 from groq import Groq
 from dotenv import load_dotenv
 
-# ✅ Set exact path to ffmpeg.exe (avoids RuntimeWarning)
+#  Load environment variables from .env
+load_dotenv()
+
+#  Get GROQ_API_KEY from .env
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+#  Debug print: show first 10 characters of API key
+print("Loaded API Key:", GROQ_API_KEY[:10] + "...")
+
+if not GROQ_API_KEY:
+    raise ValueError(" Missing GROQ_API_KEY! Set it in .env or system environment.")
+
+# 🎛 Set ffmpeg path
 AudioSegment.converter = which(
     "C:\\Users\\visha\\Downloads\\ffmpeg-2025-06-16-git-e6fb8f373e-essentials_build\\ffmpeg-2025-06-16-git-e6fb8f373e-essentials_build\\bin\\ffmpeg.exe"
 )
 
-# ✅ Load environment variables
-load_dotenv()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError("Missing GROQ_API_KEY! Set it in .env or system environment.")
-
-# ✅ Initialize Groq client
+#  Initialize Groq client
 client = Groq(api_key=GROQ_API_KEY)
 
 def convert_audio_to_wav(file_path):
-    print("🔊 Converting audio to WAV...")
+    print("🎧 Converting audio to 16kHz mono WAV...")
     audio = AudioSegment.from_file(file_path)
+    audio = audio.set_channels(1).set_frame_rate(16000)
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
         wav_path = tmp.name
         audio.export(wav_path, format="wav")
@@ -32,12 +39,18 @@ def convert_audio_to_wav(file_path):
 def transcribe_audio(file_path):
     wav_path = convert_audio_to_wav(file_path)
     recognizer = sr.Recognizer()
-    print("🧠 Transcribing audio with SpeechRecognition...")
-    with sr.AudioFile(wav_path) as source:
-        audio_data = recognizer.record(source)
-        text = recognizer.recognize_google(audio_data)
-    os.remove(wav_path)  # Cleanup temp file
-    return text.strip()
+    print("🗣️ Transcribing audio with SpeechRecognition...")
+    try:
+        with sr.AudioFile(wav_path) as source:
+            audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data)
+        return text.strip()
+    except sr.UnknownValueError:
+        raise Exception(" Could not understand audio. Try a clearer recording.")
+    except sr.RequestError as e:
+        raise Exception(f" Google Speech Recognition failed: {e}")
+    finally:
+        os.remove(wav_path)
 
 def generate_structured_output(user_input):
     system_prompt = """
@@ -86,22 +99,22 @@ if __name__ == "__main__":
     file_path = input("Enter the path to your audio file (.mp3 or .wav): ").strip()
 
     if not os.path.isfile(file_path):
-        print("❌ File does not exist. Please check the path.")
+        print(" File does not exist. Please check the path.")
         exit(1)
 
     try:
         transcription = transcribe_audio(file_path)
-        print(f"\n📝 Transcribed Text:\n{transcription}\n")
+        print(f"\n Transcribed Text:\n{transcription}\n")
 
         structured_output = generate_structured_output(transcription)
 
         try:
             parsed_output = json.loads(structured_output)
-            print("\n📦 Structured JSON Output:\n")
+            print("\n Structured JSON Output:\n")
             print(json.dumps(parsed_output, indent=2))
         except json.JSONDecodeError:
-            print("⚠️ Could not parse the response as JSON. Raw output:")
+            print(" Could not parse the response as JSON. Raw output:")
             print(structured_output)
 
     except Exception as e:
-        print("❌ Error during processing:", e)
+        print(f"\n Error during processing:\n{e}")
