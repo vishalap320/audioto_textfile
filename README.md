@@ -97,8 +97,9 @@ You'll be prompted to enter the full path to your audio file:
 
 ```python
 Enter the path to your audio file (.mp3 or .wav): C:\Users\you\Downloads\voice_note.mp3
-The program will:
 ```
+The program will:
+
 Convert and transcribe the audio
 
 Generate structured JSON
