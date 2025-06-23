@@ -84,7 +84,7 @@ pip install pydub speechrecognition python-dotenv groq
 Configure API Keys
 Create a file named .env in your project directory:
 
-``python
+```python
 GROQ_API_KEY=your_actual_groq_api_key_here
 ```
 don't share your .env file or post your API key publicly.
