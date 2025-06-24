@@ -17,7 +17,7 @@ if not GROQ_API_KEY:
 # Configure Groq client
 client = Groq(api_key=GROQ_API_KEY)
 
-# Set ffmpeg converter path explicitly
+# Set ffmpeg path
 AudioSegment.converter = which(
     "C:\\Users\\visha\\Downloads\\ffmpeg-2025-06-16-git-e6fb8f373e-essentials_build\\ffmpeg-2025-06-16-git-e6fb8f373e-essentials_build\\bin\\ffmpeg.exe"
 )
@@ -34,79 +34,86 @@ def convert_audio_to_wav(file_path):
 def transcribe_audio(file_path):
     wav_path = convert_audio_to_wav(file_path)
     recognizer = sr.Recognizer()
-    print(" Transcribing audio with Google Speech Recognition...")
+    print(" Transcribing audio...")
     try:
         with sr.AudioFile(wav_path) as source:
             audio_data = recognizer.record(source)
             text = recognizer.recognize_google(audio_data)
         return text.strip()
     except sr.UnknownValueError:
-        raise Exception(" Could not understand audio. Try a clearer recording.")
+        raise Exception(" Could not understand audio.")
     except sr.RequestError as e:
-        raise Exception(f" Google Speech Recognition failed: {e}")
+        raise Exception(f" Speech Recognition error: {e}")
     finally:
         os.remove(wav_path)
 
-def generate_structured_output(user_input):
+def generate_structured_classified_output(transcribed_text):
     system_prompt = """
-You are a precise assistant that transforms a stream-of-consciousness journal entry into a structured JSON format.
+You are a helpful assistant. Given a journal-like transcription, extract individual activities or tasks.
 
-Instructions:
-- Break the journal entry into individual events or concerns.
-- For each, provide:
-  - "title": a short, specific summary (include time if present, e.g., "Swimming class at 12 PM").
-  - "description": a detailed sentence (not a list) summarizing everything related to the title.
-- Ensure every entry has both a "title" and a "description" key.
-- Output only valid, complete JSON in this format:
+For each task, return:
+- a "title": short summary
+- a "description": full, clear sentence
+- assign to a category: "personal", "work", or "social"
 
-[
-  {
-    "entry": 1,
-    "title": "Short, specific title",
-    "description": "Clear and complete description."
-  }
-]
+Respond in this JSON format:
+{
+  "personal": [
+    {"title": "...", "description": "..."},
+    ...
+  ],
+  "work": [
+    {"title": "...", "description": "..."},
+    ...
+  ],
+  "social": [
+    {"title": "...", "description": "..."},
+    ...
+  ]
+}
+Be concise but complete. Only return the valid JSON object.
 """
 
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_input}
+        {"role": "user", "content": transcribed_text}
     ]
 
-    print(" Sending transcription to LLaMA 3 via Groq...")
+    print(" Sending request to LLaMA 3 via Groq...")
     response = client.chat.completions.create(
         model="llama3-70b-8192",
         messages=messages,
         temperature=0.3,
         max_tokens=2048
     )
+
     return response.choices[0].message.content.strip()
 
 if __name__ == "__main__":
-    file_path = input("Enter the path to your audio file (.mp3 or .wav): ").strip()
+    file_path = input(" Enter the path to your audio file (.mp3 or .wav): ").strip()
 
     if not os.path.isfile(file_path):
-        print(" File does not exist. Please check the path.")
+        print(" File not found.")
         exit(1)
 
     try:
         transcription = transcribe_audio(file_path)
         print(f"\n Transcribed Text:\n{transcription}\n")
 
-        structured_output = generate_structured_output(transcription)
+        structured_output = generate_structured_classified_output(transcription)
 
         try:
             parsed_output = json.loads(structured_output)
-            print("\n Structured JSON Output:\n")
+            print("\n Structured & Classified Output:\n")
             print(json.dumps(parsed_output, indent=2))
 
-            with open("structured_output.json", "w", encoding="utf-8") as f:
+            with open("classified_output.json", "w", encoding="utf-8") as f:
                 json.dump(parsed_output, f, indent=2)
-            print("Output saved to structured_output.json")
+            print(" Output saved to classified_output.json")
 
         except json.JSONDecodeError:
             print(" Could not parse JSON. Raw output:")
             print(structured_output)
 
     except Exception as e:
-        print(f"\n Error during processing:\n{e}")
+        print(f"\n Error: {e}")
