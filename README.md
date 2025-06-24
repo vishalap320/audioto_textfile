@@ -16,39 +16,62 @@ This project takes unstructured, stream-of-consciousness **audio journal entries
 
 ##  Example Input & Output
 
-###  Example Audio Transcription
+###  Example Audio Transcription with gramer mistak
 
-I started my day at 5:25 AM and went to the gym around 6:00 AM.
-I did a workout and returned home by 7:15 AM.
-After my morning routine, I attended a meeting at 7:47 AM about acids and bases.
-I'm volunteering at a workshop called Beshma Hunt.
+today start my day at 5:30 and I like it was to lazy and I finished my personal work by 6:00 and started to go to gym and I reached there by 6:15 and I started my shoulder workout as per the schedule and after the gym I acceleration by 7:30 and after the gym I went to my home and like played with my dogs for all time and return to my living space in any sorry at 8:15 and I started my daily morning meeting I know the way told me to volunteer for Bhishma hunt which is for the students were it tells to improve their knowledge by asking simple maths question and it took very long time and I was late to my college and I got scold and after that I have I had my internship meeting which in which I was late to that also because of the meeting and I actually clarified some doubt with Vikram sir about my task after the meeting finished by 10 15 and since like I was hungry I went and bits for my breakfast and after the event back to my work where I have to convert audio file into text file with JSON output and I was writing code for that after that I had my lunch time which is 2:30 so yeah happy after finishing my after hearing that my friend got internship company will be appointed as full time worker 133 finish your lunch and then started my work again after that my sister call me and remember that on 27th her engagement was there since his brother so I have to be there on time and how to make some I have to put some permission on the day especially like putting putting permission in the base camp walking to the messenger and I went to sleep at 10:00 a.m.
+
 
 ```python
 ###  Generated JSON Output
 
-```json
-[
-  {
-    "entry": 1,
-    "title": "Woke up at 5:25 AM",
-    "description": "Started the day by waking up at 5:25 AM."
-  },
-  {
-    "entry": 2,
-    "title": "Gym at 6:00 AM",
-    "description": "Went to the gym at 6:00 AM and completed a workout, returning home by 7:15 AM."
-  },
-  {
-    "entry": 3,
-    "title": "Morning meeting at 7:47 AM",
-    "description": "Attended a morning meeting about acids and bases, including experiments and classifications."
-  },
-  {
-    "entry": 4,
-    "title": "Volunteering at Beshma Hunt",
-    "description": "Volunteering at a children's workshop called Beshma Hunt, focused on brain development through activities."
-  }
-]
+{
+  "personal": [
+    {
+      "title": "Morning routine",
+      "description": "Started the day at 5:30 and finished personal work by 6:00"
+    },
+    {
+      "title": "Gym",
+      "description": "Went to the gym and completed a shoulder workout from 6:15 to 7:30"
+    },
+    {
+      "title": "Play with dogs",
+      "description": "Played with dogs at home from 7:30 to 8:15"
+    },
+    {
+      "title": "Sister's engagement",
+      "description": "Made plans to attend sister's engagement on 27th and requested permission for the day"
+    }
+  ],
+  "work": [
+    {
+      "title": "Daily morning meeting",
+      "description": "Attended daily morning meeting and volunteered for Bhishma hunt"
+    },
+    {
+      "title": "Internship meeting",
+      "description": "Attended internship meeting and clarified doubts with Vikram sir"
+    },
+    {
+      "title": "Convert audio file to text",
+      "description": "Wrote code to convert audio file to text file with JSON output"
+    }
+  ],
+  "social": [
+    {
+      "title": "Breakfast",
+      "description": "Took a break to have breakfast"
+    },
+    {
+      "title": "Lunch",
+      "description": "Took a break to have lunch and heard about friend's internship news"
+    },
+    {
+      "title": "Call with sister",
+      "description": "Received a call from sister to discuss her engagement plans"
+    }
+  ]
+}
 
 ```
 ## Setting Up the Environment (macOS & Windows)
