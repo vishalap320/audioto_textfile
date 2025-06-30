@@ -1,4 +1,4 @@
-#  Audio to Structured JSON Converter (with Groq LLaMA 3)
+# 1. Audio to Structured JSON Converter (with Groq LLaMA 3)
 
 This project takes unstructured, stream-of-consciousness **audio journal entries** and converts them into clean, structured **JSON format** using **Google Speech Recognition** and **Groq's LLaMA 3** language model.
 
@@ -144,3 +144,55 @@ Make sure the ffmpeg.exe path is valid in the code.
 JSON parsing may fail if Groq returns unstructured output. Debugging info will be shown in that case.
 
 The model used: llama3-70b-8192 via Groq.
+
+
+# Audio to AAC Converter (with Pydub and FFmpeg)
+
+This  converts **any audio file format** (like `.mp3`, `.wav`, `.flac`, `.ogg`, `.opus`, `.webm`, etc.) into **AAC audio** saved as a `.m4a` file. It uses the Python `pydub` library along with `ffmpeg`.
+
+---
+
+## What This Code Does
+
+- Accepts an audio file in any format supported by FFmpeg.
+- Automatically detects the file type and decodes it.
+- Converts and saves it as `.m4a` (AAC inside MP4 container).
+- Works on `.mp3`, `.wav`, `.flac`, `.opus`, `.webm`, `.m4a`, even `.dat` files containing audio.
+
+---
+
+## Clone the Repository
+```python
+git clone https://github.com/vishal320/audioto_textfile.git
+cd audioto_textfile
+```
+How to Run the Script
+Run the converter with:
+
+```python
+python convert_to_aac.py
+```
+Then provide the full path to your audio file:
+text
+```
+Enter path to your audio file: C:\Users\you\Downloads\voice_note.ogg
+```
+The script will convert it and save a file like:
+text
+```
+C:\Users\you\Downloads\voice_note.m4a
+```
+Use Cases
+Normalize audio format before transcription
+
+Convert WhatsApp, Telegram, or other voice notes to .m4a
+
+Prepare audio for mobile or browser playback
+
+## Notes
+This script does not transcribe audio.
+
+For transcription + structured JSON using LLaMA 3 and Groq, see the related project: Audio to Structured JSON
+
+Make sure ffmpeg is correctly installed and accessible from your command line.
+
